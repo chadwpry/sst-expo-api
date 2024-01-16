@@ -1,5 +1,5 @@
 {
-  "name": "expo-auth-cognito",
+  "name": "expo-auth",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "sst": "^2.39.2",
+    "sst": "2.39.2",
     "aws-cdk-lib": "2.110.1",
     "constructs": "10.3.0",
     "typescript": "^5.3.3",
@@ -20,5 +20,8 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "expo": "^49.0.21"
+  }
 }

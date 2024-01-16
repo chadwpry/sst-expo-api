@@ -1,6 +1,6 @@
 import { EventHandler } from "sst/node/event-bus";
-import { Todo } from "@expo-auth-cognito/core/todo";
+import { Todo } from "@expo-auth/core/todo";
 
-export const handler = EventHandler(Todo.Events.Created, async (evt) => {
-  console.log("Todo created", evt);
+export const handler = EventHandler(Todo.Events.Created, async (todoEvent) => {
+  console.log("Todo created", todoEvent);
 });

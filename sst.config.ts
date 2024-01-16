@@ -5,7 +5,7 @@ import { EventBusStack } from "./stacks/EventBusStack";
 export default {
   config(_input) {
     return {
-      name: "expo-auth-cognito",
+      name: "expo-auth",
       region: "us-east-1",
     };
   },

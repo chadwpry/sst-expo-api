@@ -1,20 +1,45 @@
-import { StackContext, Api, Cognito, use } from "sst/constructs";
+import { Api, Cognito, StackContext, use } from "sst/constructs";
 import { EventBusStack } from "./EventBusStack";
+import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
+import os from 'os';
 
 export function ApiStack({ app, stack }: StackContext) {
-  const cognito = new Cognito(stack, "cognito", {
-    login: ["email"],
+  const userPool = new UserPool(stack, "UserPool", {
+    selfSignUpEnabled: true,
+    signInCaseSensitive: false,
+    signInAliases: {
+      email: true,
+    },
+    userPoolName: app.logicalPrefixedName('cognito'),
   });
 
-  const domainPrefix = "sst-expo-api-597288"
+  const nics = os.networkInterfaces();
+  const callbackUrls = [];
 
-  // cognito.cdk.userPool.addClient("userPoolClient", {
-  //   oAuth: {
-  //     callbackUrls: [
-  //       "exp://192.168.86.25:8081"
-  //     ],
-  //   },
-  // });
+  if (nics.en0) {
+    const ip4 = nics.en0.find((nic) => nic.family === 'IPv4');
+
+    if (ip4) {
+      callbackUrls.push(`exp://${ip4.address}:8081`);
+    }
+  }
+
+  const userPoolClient = new UserPoolClient(stack, "UserPoolClient", {
+    oAuth: {
+      callbackUrls: callbackUrls,
+    },
+    userPool: userPool,
+  });
+
+  const cognito = new Cognito(stack, "cognito", {
+    login: ["email"],
+    cdk: {
+      userPool: userPool,
+      userPoolClient: userPoolClient,
+    }
+  });
+
+  const domainPrefix = Buffer.from(`${app.stageName}-${app.name}`).toString('hex')
 
   cognito.cdk.userPool.addDomain("userPoolCognitoDomain", {
     cognitoDomain: {
@@ -43,9 +68,9 @@ export function ApiStack({ app, stack }: StackContext) {
     routes: {
       "GET /": {
         authorizer: "none",
-        function: "packages/functions/src/lambda.handler",
+        function: "packages/functions/src/root.check",
       },
-      "GET /todo": "packages/functions/src/todo.list",
+      "GET /todos": "packages/functions/src/todo.list",
       "POST /todo": "packages/functions/src/todo.create",
     },
   });
@@ -54,7 +79,7 @@ export function ApiStack({ app, stack }: StackContext) {
     ApiEndpoint: api.url,
     Region: app.region,
     UserPoolId: cognito.userPoolId,
-    UserPoolDomainPrefix: domainPrefix,
+    UserPoolHostUrl: `https://${domainPrefix}.auth.${app.region}.amazoncognito.com`,
     UserPoolClientId: cognito.userPoolClientId,
     IdentityPoolId: cognito.cognitoIdentityPoolId,
   });

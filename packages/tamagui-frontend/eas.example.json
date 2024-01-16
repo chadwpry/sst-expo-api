@@ -1,0 +1,18 @@
+{
+    "build": {
+        "development": {
+            "extends": "base",
+            "developmentClient": true,
+            "env": {
+                "ENVIRONMENT": "development"
+            },
+            "android": {
+                "distribution": "internal",
+                "withoutCredentials": true
+            },
+            "ios": {
+                "simulator": true
+            }
+        }
+    }
+}

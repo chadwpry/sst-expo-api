@@ -1,5 +1,5 @@
 import { ApiHandler } from "sst/node/api";
-import { Todo } from "@expo-auth-cognito/core/todo";
+import { Todo } from "@expo-auth/core/todo";
 
 export const create = ApiHandler(async (_evt) => {
   await Todo.create();

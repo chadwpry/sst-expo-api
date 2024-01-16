@@ -1,6 +1,25 @@
 # dependencies
 node_modules
 
+.expo/
+dist/
+web-build/
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# macOS
+.DS_Store
+*.pem
+
 # sst
 .sst
 .build
@@ -11,3 +30,5 @@ node_modules
 # misc
 .DS_Store
 
+expo-env.d.ts
+# @end expo-cli
