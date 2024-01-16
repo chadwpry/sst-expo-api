@@ -18,7 +18,7 @@ $ git clone https://github.com/chadwpry/sst-expo-api.git
 
 SST Api that includes two stacks, EventBus and Api.  The Api includes a Todo
 model and can fetch a list of random items or create a new random item. It is
-security using Amazon Cognito.
+secured using Amazon Cognito.
 
 1. EventBus - distributed processing of events
 2. Api - REST Api secured by a Cognito JWT implementation
