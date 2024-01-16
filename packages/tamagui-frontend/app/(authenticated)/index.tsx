@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, H4, ScrollView, Text, View, XStack } from 'tamagui'
+import { Card, H4, ScrollView, Spinner, Text, View, XStack } from 'tamagui'
 import { Droplets, Stethoscope, Syringe } from '@tamagui/lucide-icons'
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { env } from '@/services/Configuration';
@@ -11,7 +11,7 @@ const {
 } = env;
 
 export default function TabOneScreen() {
-  const [list, setList] = useState([]);
+  const [list, setList] = useState();
 
   useEffect(() => {
     const onLoad = async () => {
@@ -64,22 +64,26 @@ export default function TabOneScreen() {
 
   return (
     <View alignItems="center" justifyContent="center" h="100%" w="100%">
-      <ScrollView height="100%" mt="$0" pt="$6" width="100%">
-        {list.map((item: TodoType, index: number) => (
-          <Card bg="#ffffff" br="$4" bordered key={`card-${index}`} mb="$4" ml="$3" mr="$3">
-            <Card.Header bc={colorForTitle(item)} btlr="$4" btrr="$4" pl="$4" pr="$4" pt="$2" pb="$2">
-              <XStack flex={1} ai="center" jc="space-between">
-                <H4 color="#ffffff">{item.title}</H4>
+      {list ? (
+        <ScrollView height="100%" mt="$0" pt="$6" width="100%">
+          {list.map((item: TodoType, index: number) => (
+            <Card bg="#ffffff" br="$4" bordered key={`card-${index}`} mb="$4" ml="$3" mr="$3">
+              <Card.Header bc={colorForTitle(item)} btlr="$4" btrr="$4" pl="$4" pr="$4" pt="$2" pb="$2">
+                <XStack flex={1} ai="center" jc="space-between">
+                  <H4 color="#ffffff">{item.title}</H4>
 
-                {iconForTodo(item)}
-              </XStack>
-            </Card.Header>
-            <Card.Footer padded>
-              <Text>{item.subtitle}</Text>
-            </Card.Footer>
-          </Card>
-        ))}
-      </ScrollView>
+                  {iconForTodo(item)}
+                </XStack>
+              </Card.Header>
+              <Card.Footer padded>
+                <Text>{item.subtitle}</Text>
+              </Card.Footer>
+            </Card>
+          ))}
+        </ScrollView>
+      ): (
+        <Spinner size="large" color="$orange10" />
+      )}
     </View>
   );
 }

@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Avatar, createTamagui, TamaguiProvider, Text } from 'tamagui';
+import { useEffect } from 'react';
+import { createTamagui, TamaguiProvider } from 'tamagui';
 import { config } from '@tamagui/config/v2';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Link, SplashScreen, Stack } from 'expo-router';
-import { Pressable, useColorScheme } from 'react-native';
+import { SplashScreen, Stack } from 'expo-router';
 
 const tamaguiConfig = createTamagui(config)
 
@@ -22,7 +20,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(authenticated)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -32,7 +30,6 @@ export default function RootLayout() {
   const [fontLoaded, fontError] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -55,33 +52,19 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
     <TamaguiProvider config={tamaguiConfig}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{
-            animation: "fade", headerShown: true, headerTitle: '',
-            headerLeft: () => (
-              <Link href="/modal" asChild>
-                <Pressable>
-                  {({ pressed }) => (
-                    <Avatar circular size="$3">
-                      <Avatar.Fallback ai="center" bc="#ff0000" jc="center">
-                        <Text color="#ffffff" fontSize="$5">U</Text>
-                      </Avatar.Fallback>
-                    </Avatar>
-                  )}
-                </Pressable>
-              </Link>
-            ),
-  
-          }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="login" options={{ headerShown: false, animation: "fade" }} />
-        </Stack>
-      </ThemeProvider>
+      <Stack>
+        <Stack.Screen name="(authenticated)" options={{
+          animation: "fade", headerShown: false,
+        }} />
+        <Stack.Screen name="profile" options={{
+          headerShown: true,
+          presentation: 'modal',
+          title: 'Profile',
+        }} />
+        <Stack.Screen name="login" options={{ headerShown: false, animation: "fade" }} />
+      </Stack>
     </TamaguiProvider>
   );
 }

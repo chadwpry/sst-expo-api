@@ -27,7 +27,7 @@ export default function LoginScreen() {
           const authorizeResponse = await authorize(response.params.code, request?.codeVerifier);
 
           if (authorizeResponse) {
-            router.replace('(tabs)');
+            router.replace('/(authenticated)');
           }
         }
       }

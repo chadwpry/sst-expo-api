@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-auth-with-router",
-    "slug": "expo-auth-with-router",
+    "name": "expo-auth-tamagui",
+    "slug": "expo-auth-tamagui",
     "scheme": "expoapi",
     "version": "1.0.0",
     "orientation": "portrait",
