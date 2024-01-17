@@ -1,10 +1,11 @@
+import React from 'react';
 import {
   exchangeCodeAsync, makeRedirectUri, ResponseType, revokeAsync, TokenResponse, useAuthRequest,
 } from 'expo-auth-session';
 import { add } from 'date-fns';
 import * as SecureStore from 'expo-secure-store';
 import { env, expoScheme } from '@/services/Configuration';
-import { createContext, Reducer, useContext, useReducer, useState } from 'react';
+import * as ProfileService from '@/services/Profile';
 
 const {
   UserPoolClientId: clientId,
@@ -25,7 +26,11 @@ const DISCOVERY_DOCUMENT = {
   revocationEndpoint: `${userPoolHostUrl}/oauth2/revoke`,
 }
 
-const redirectUri = makeRedirectUri({scheme: expoScheme});
+const redirectUri = makeRedirectUri({
+  // isTripleSlashed: true,
+  // path: '(profile)',
+  scheme: expoScheme,
+});
 
 const clearAuthState = async () => {
   try {
@@ -155,4 +160,94 @@ export const revoke = async () => {
       }
     }
   }
+}
+
+type Action = {
+  type: 'UPDATE-PROFILE' | 'LOGOUT',
+  data?: {
+    isAuthenticated: boolean;
+    profile?: ProfileService.ProfileType,
+  },
+}
+type Dispatch = (action: Action) => void
+type State = {
+  isAuthenticated: boolean;
+  profile?: ProfileService.ProfileType,
+}
+type AuthenticationProviderProps = {
+  children: React.ReactNode
+}
+
+function reducer(state: State, action: Action) {
+  const { profile } = action.data || {};
+
+  switch (action.type) {
+    case 'UPDATE-PROFILE':
+      return {
+        ...state,
+        isAuthenticated: true,
+        profile,
+      };
+    case 'LOGOUT':
+      return {
+        isAuthenticated: false,
+      }
+  }
+
+  return state;
+}
+
+const AuthenticationContext = React.createContext<
+  {state: State, dispatch: Dispatch} | undefined
+>(undefined);
+
+export const AuthenticationProvider = ({ children }: AuthenticationProviderProps) => {
+  const [state, dispatch] = React.useReducer(reducer, { isAuthenticated: false });
+
+  const value = {state, dispatch};
+
+  return (
+    <AuthenticationContext.Provider value={value}>
+      { children }
+    </AuthenticationContext.Provider>
+  );
+}
+
+export const useAuthentication = () => {
+  const context = React.useContext(AuthenticationContext);
+
+  if (context === undefined) {
+    throw new Error('useAuthentication must be used within an AuthenticationContext');
+  }
+
+  const { state, dispatch } = context;
+
+  return {
+    isAuthenticated: context.state.isAuthenticated,
+    profile: context.state.profile,
+    updateProfile: async (profile: ProfileService.ProfileType) => {
+      dispatch({
+        type: 'UPDATE-PROFILE',
+        data: {
+          isAuthenticated: true,
+          profile,
+        }
+      });
+    },
+    login: (profile: ProfileService.ProfileType) => {
+      dispatch({
+        type: 'UPDATE-PROFILE',
+        data: {
+          isAuthenticated: true,
+          profile,
+        }
+      });
+    },
+    logout: async () => {
+      const result = await revoke();
+      dispatch({
+        type: 'LOGOUT',
+      });
+    },
+  };
 }

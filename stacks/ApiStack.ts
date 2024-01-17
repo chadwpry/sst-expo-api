@@ -21,6 +21,7 @@ export function ApiStack({ app, stack }: StackContext) {
 
     if (ip4) {
       callbackUrls.push(`exp://${ip4.address}:8081`);
+      callbackUrls.push(`exp://${ip4.address}:8081/--/profile`);
     }
   }
 
@@ -72,6 +73,8 @@ export function ApiStack({ app, stack }: StackContext) {
       },
       "GET /todos": "packages/functions/src/todo.list",
       "POST /todo": "packages/functions/src/todo.create",
+      "GET /profile": "packages/functions/src/profile.get",
+      "PUT /profile": "packages/functions/src/profile.put",
     },
   });
 

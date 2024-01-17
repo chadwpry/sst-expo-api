@@ -10,12 +10,12 @@ const {
   ApiEndpoint: apiEndpoint,
 } = env;
 
-export default function TabOneScreen() {
-  const [list, setList] = useState();
+export default function TodoListScreen() {
+  const [list, setList] = useState<TodoType[]>();
 
   useEffect(() => {
     const onLoad = async () => {
-      const idToken = await getIdToken();
+      const idToken = await getIdToken() || '';
 
       const response = await fetch(apiEndpoint + '/todos', {
         method: "GET",
