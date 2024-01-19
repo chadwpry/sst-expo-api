@@ -2,39 +2,23 @@ import { useEffect, useState } from 'react';
 import { Card, H4, ScrollView, Spinner, Text, View, XStack } from 'tamagui'
 import { Droplets, Stethoscope, Syringe } from '@tamagui/lucide-icons'
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { env } from '@/services/Configuration';
-import { getIdToken } from '@/services/Authentication';
-import { TodoType } from  '../../../core/src/todo';
 
-const {
-  ApiEndpoint: apiEndpoint,
-} = env;
+import * as TodoService from '@/services/Todo';
 
 export default function TodoListScreen() {
-  const [list, setList] = useState<TodoType[]>();
+  const [todos, setTodos] = useState<TodoService.TodoType[]>();
 
   useEffect(() => {
     const onLoad = async () => {
-      const idToken = await getIdToken() || '';
+      const list = await TodoService.list();
 
-      const response = await fetch(apiEndpoint + '/todos', {
-        method: "GET",
-        headers: {
-          Authorization: idToken,
-        },
-      });
-
-      if (response.status === 200) {
-        const json = await response.json()
-
-        setList(json);
-      }
+      setTodos(list);
     }
 
     onLoad();
   }, []);
 
-  const iconForTodo = (item: TodoType) => {
+  const iconForTodo = (item: TodoService.TodoType) => {
     if (['Blood Collection', 'Stool Collection', 'Urine Collection'].includes(item.title)) {
       return <Droplets color="#ffffff" />;
     } else if (['Vaccination', 'Tissue Biopsy'].includes(item.title)) {
@@ -48,7 +32,7 @@ export default function TodoListScreen() {
     }
   }
 
-  const colorForTitle = (item: TodoType) => {
+  const colorForTitle = (item: TodoService.TodoType) => {
     if (['Blood Collection', 'Stool Collection', 'Urine Collection'].includes(item.title)) {
       return "#e63946";
     } else if (['Vaccination', 'Tissue Biopsy'].includes(item.title)) {
@@ -64,9 +48,9 @@ export default function TodoListScreen() {
 
   return (
     <View alignItems="center" justifyContent="center" h="100%" w="100%">
-      {list ? (
+      {todos ? (
         <ScrollView height="100%" mt="$0" pt="$6" width="100%">
-          {list.map((item: TodoType, index: number) => (
+          {todos.map((item: TodoService.TodoType, index: number) => (
             <Card bg="#ffffff" br="$4" bordered key={`card-${index}`} mb="$4" ml="$3" mr="$3">
               <Card.Header bc={colorForTitle(item)} btlr="$4" btrr="$4" pl="$4" pr="$4" pt="$2" pb="$2">
                 <XStack flex={1} ai="center" jc="space-between">

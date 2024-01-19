@@ -1,9 +1,20 @@
+import * as SecureStore from 'expo-secure-store';
 import { env } from '@/services/Configuration';
-import { getIdToken } from '@/services/Authentication';
 
 const {
   ApiEndpoint: apiEndpoint,
+  ID_TOKEN_KEY,
 } = env;
+
+const getIdToken = async (): Promise<string> => {
+  const idToken = await SecureStore.getItemAsync(ID_TOKEN_KEY) || '';
+
+  // if (!idToken) {
+  //   throw new Error('Attempting to request an idToken that does not exist');
+  // }
+
+  return idToken;
+}
 
 export type ProfileType = {
   firstName: string;
@@ -13,7 +24,7 @@ export type ProfileType = {
 };
 
 export const get = async (): Promise<ProfileType> => {
-  const idToken = await getIdToken() || '';
+  const idToken = await getIdToken();
   const response = await fetch(apiEndpoint + '/profile', {
     method: "GET",
     headers: {
@@ -24,8 +35,12 @@ export const get = async (): Promise<ProfileType> => {
   return response.json();
 }
 
-export const put = async (profile: ProfileType): Promise<boolean> => {
-  const idToken = await getIdToken() || '';
+export type PutRequestType = {
+  profile: ProfileType;
+}
+
+export const put = async ({ profile }: PutRequestType): Promise<boolean> => {
+  const idToken = await getIdToken();
   const response = await fetch(apiEndpoint + '/profile', {
     method: "PUT",
     headers: {

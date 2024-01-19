@@ -1,6 +1,7 @@
 import React from 'react';
 import {
-  exchangeCodeAsync, makeRedirectUri, ResponseType, revokeAsync, TokenResponse, useAuthRequest,
+  AuthRequest, exchangeCodeAsync, makeRedirectUri,
+  ResponseType, revokeAsync, TokenResponse,
 } from 'expo-auth-session';
 import { add } from 'date-fns';
 import * as SecureStore from 'expo-secure-store';
@@ -10,15 +11,12 @@ import * as ProfileService from '@/services/Profile';
 const {
   UserPoolClientId: clientId,
   UserPoolHostUrl: userPoolHostUrl,
+  ID_TOKEN_KEY,
+  ACCESS_TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
+  ISSUED_AT_KEY,
+  EXPIRES_IN_KEY,
 } = env;
-
-const ID_TOKEN = 'SecureStoreAuthIdToken';
-const ACCESS_TOKEN = 'SecureStoreAuthAccessToken';
-const REFRESH_TOKEN = 'SecureStoreAuthRefreshToken';
-const ISSUED_AT = 'SecureStoreAuthIssuedAt';
-const EXPIRES_IN = 'SecureStoreAuthExpiresIn';
-
-const SCOPES = ["openid", "profile", "email"];
 
 const DISCOVERY_DOCUMENT = {
   authorizationEndpoint: `${userPoolHostUrl}/oauth2/authorize`,
@@ -34,11 +32,11 @@ const redirectUri = makeRedirectUri({
 
 const clearAuthState = async () => {
   try {
-    await SecureStore.setItemAsync(ID_TOKEN, '');
-    await SecureStore.setItemAsync(ACCESS_TOKEN, '');
-    await SecureStore.setItemAsync(REFRESH_TOKEN, '');
-    await SecureStore.setItemAsync(ISSUED_AT, '');
-    await SecureStore.setItemAsync(EXPIRES_IN, '');
+    await SecureStore.setItemAsync(ID_TOKEN_KEY, '');
+    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, '');
+    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, '');
+    await SecureStore.setItemAsync(ISSUED_AT_KEY, '');
+    await SecureStore.setItemAsync(EXPIRES_IN_KEY, '');
 
   } catch (error) {
     console.error(error);
@@ -55,11 +53,11 @@ const setAuthState = async (object: TokenResponse) => {
   } = object;
 
   try {
-    await SecureStore.setItemAsync(ID_TOKEN, idToken);
-    await SecureStore.setItemAsync(ACCESS_TOKEN, accessToken);
-    await SecureStore.setItemAsync(REFRESH_TOKEN, refreshToken);
-    await SecureStore.setItemAsync(ISSUED_AT, JSON.stringify(issuedAt));
-    await SecureStore.setItemAsync(EXPIRES_IN, JSON.stringify(expiresIn))
+    await SecureStore.setItemAsync(ID_TOKEN_KEY, idToken);
+    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
+    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+    await SecureStore.setItemAsync(ISSUED_AT_KEY, JSON.stringify(issuedAt));
+    await SecureStore.setItemAsync(EXPIRES_IN_KEY, JSON.stringify(expiresIn))
 
   } catch (error) {
     console.error(error);
@@ -72,29 +70,9 @@ const setAuthState = async (object: TokenResponse) => {
 
 // PUBLIC
 
-export const isAuthenticated = async () => {
-  const idToken = await getIdToken();
-  const expiresDate = await getExpiresDate();
-
-  if (idToken) {
-    return expiresDate < new Date;
-  } else {
-    return false;
-  }
-}
-
-export const useAuthenticationRequest = () => {
-  return useAuthRequest({
-    clientId,
-    responseType: ResponseType.Code,
-    redirectUri,
-    usePKCE: true,
-  }, DISCOVERY_DOCUMENT);
-}
-
 export const getExpiresDate = async () => {
-  const issuedAt = await SecureStore.getItemAsync(ISSUED_AT);
-  const expiresIn = await SecureStore.getItemAsync(EXPIRES_IN);
+  const issuedAt = await SecureStore.getItemAsync(ISSUED_AT_KEY);
+  const expiresIn = await SecureStore.getItemAsync(EXPIRES_IN_KEY);
 
   let expiresValue: number;
 
@@ -111,15 +89,162 @@ export const getExpiresDate = async () => {
   }
 }
 
-export const getIdToken = async () => {
-  return await SecureStore.getItemAsync(ID_TOKEN);
+export const getIdToken = async (): Promise<string> => {
+  const idToken = await SecureStore.getItemAsync(ID_TOKEN_KEY) || '';
+
+  // if (!idToken) {
+  //   throw new Error('Attempting to request an idToken that does not exist');
+  // }
+
+  return idToken;
 }
 
 export const getIssuedAt = () => {
-  const issuedAt = SecureStore.getItemAsync(ISSUED_AT);
+  const issuedAt = SecureStore.getItemAsync(ISSUED_AT_KEY);
 }
 
-export const authorize = async (code: string, code_verifier: string) => {
+type Action =
+  | { type: 'PROFILE-UPDATE-BEGIN' }
+  | { type: 'PROFILE-UPDATE-END', data: { profile: ProfileService.ProfileType } }
+  | { type: 'SIGN-IN-BEGIN' }
+  | { type: 'SIGN-IN-END', data: { profile: ProfileService.ProfileType } }
+  | { type: 'SIGN-OUT-BEGIN' }
+  | { type: 'SIGN-OUT-END' }
+  | { type: 'UPDATE-PROFILE', data?: {
+      isAuthenticated: boolean,
+      profile?: ProfileService.ProfileType }};
+
+type DispatchType = (action: Action) => void;
+
+type StateType = {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  profile?: ProfileService.ProfileType,
+}
+
+type AuthenticationProviderProps = {
+  children: React.ReactNode
+}
+
+function reducer(state: StateType, action: Action) {
+  switch (action.type) {
+    case 'PROFILE-UPDATE-BEGIN':
+      return {
+        ...state,
+        isAuthenticated: true,
+        isLoading: true,
+      }
+    case 'PROFILE-UPDATE-END':
+      const { profile } = action.data;
+
+      return {
+        isAuthenticated: true,
+        isLoading: false,
+        profile,
+      }
+    case 'SIGN-IN-BEGIN':
+      return {
+        isAuthenticated: false,
+        isLoading: true,
+      }
+    case 'SIGN-IN-END':
+      return {
+        isAuthenticated: true,
+        isLoading: false,
+        profile: action.data.profile,
+      }
+    case 'SIGN-OUT-BEGIN':
+      return {
+        ...state,
+        isAuthenticated: true,
+        isLoading: true,
+      }
+    case 'SIGN-OUT-END':
+      return {
+        isAuthenticated: false,
+        isLoading: false,
+      }
+    }
+
+  return state;
+}
+
+const AuthenticationContext = React.createContext<
+  {state: StateType, dispatch: DispatchType} | undefined
+>(undefined);
+
+export const AuthenticationProvider = ({ children }: AuthenticationProviderProps) => {
+  const [state, dispatch] = React.useReducer(reducer, { isAuthenticated: false, isLoading: false });
+
+  const value = {state, dispatch};
+
+  return (
+    <AuthenticationContext.Provider value={value}>
+      { children }
+    </AuthenticationContext.Provider>
+  );
+}
+
+
+export const useAuthentication = () => {
+  const context = React.useContext(AuthenticationContext);
+  const request = new AuthRequest({
+    clientId,
+    responseType: ResponseType.Code,
+    redirectUri,
+    usePKCE: true,
+  });
+
+  if (context === undefined) {
+    throw new Error('useAuthentication must be used within an AuthenticationContext');
+  }
+
+  const { state, dispatch } = context;
+
+  return {
+    isAuthenticated: context.state.isAuthenticated,
+    isLoading: context.state.isLoading,
+    profile: context.state.profile,
+
+    profileUpdate: async (profile: ProfileService.ProfileType) => {
+      return await handleProfileUpdate({ state, dispatch, profile });
+    },
+    signIn: async () => {
+      await handleSignIn({ state, dispatch, request });
+    },
+    signOut: async () => {
+      return await handleSignOut({ state, dispatch });
+    }
+  };
+}
+
+type SignInType = {
+  state: StateType;
+  dispatch: DispatchType,
+  request: AuthRequest,
+}
+
+const handleSignIn = async ({ state, dispatch, request }: SignInType) => {
+  dispatch({ type: 'SIGN-IN-BEGIN' });
+
+  const result = await request.promptAsync(DISCOVERY_DOCUMENT);
+
+  if (result?.type === 'success') {
+    if (!request?.codeVerifier) {
+      throw new Error('Missing code verifier in authentication/authorization request');
+    }
+
+    const authorizeResponse = await authorize(result.params.code, request?.codeVerifier);
+
+    if (authorizeResponse) {
+      const profile = await ProfileService.get();
+
+      dispatch({ type: 'SIGN-IN-END', data: { profile } });
+    }
+  }
+}
+
+const authorize = async (code: string, code_verifier: string) => {
   try {
     const response = await exchangeCodeAsync({
         clientId,
@@ -141,8 +266,15 @@ export const authorize = async (code: string, code_verifier: string) => {
   return false;
 }
 
-export const revoke = async () => {
-  const token = await SecureStore.getItemAsync(REFRESH_TOKEN);
+type SignOutType = {
+  state: StateType;
+  dispatch: DispatchType,
+}
+
+const handleSignOut = async ({ state, dispatch }: SignOutType) => {
+  dispatch({ type: 'SIGN-OUT-BEGIN' });
+
+  const token = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
   if (token) {
     const response = await revokeAsync({
@@ -154,6 +286,8 @@ export const revoke = async () => {
       try {
         await clearAuthState();
 
+        dispatch({ type: 'SIGN-OUT-END' });
+
         return true;
       } catch (error) {
         console.log(error);
@@ -162,113 +296,22 @@ export const revoke = async () => {
   }
 }
 
-type SignUpCredentials = {
-  username: string;
-  password: string;
+type ProfileUpdateType = {
+  state: StateType;
+  dispatch: DispatchType,
+  profile: ProfileService.ProfileType,
 }
 
-type Action =
-  | { type: 'SIGN-UP'; data: SignUpCredentials }
-  | { type: 'UPDATE-PROFILE'; data?: {
-      isAuthenticated: boolean,
-      profile?: ProfileService.ProfileType } }
-  | { type: 'LOGOUT', data?: {
-      isAuthenticated: boolean,
-      profile?: ProfileService.ProfileType
-    } };
+const handleProfileUpdate = async ({ state, dispatch, profile }: ProfileUpdateType): Promise<boolean> => {
+  dispatch({ type: 'PROFILE-UPDATE-BEGIN' });
 
-type DispatchType = (action: Action) => void;
+  const result = await ProfileService.put({ profile });
 
-type StateType = {
-  isAuthenticated: boolean;
-  isLoading?: boolean;
-  profile?: ProfileService.ProfileType,
-}
+  if (result) {
+    dispatch({ type: 'PROFILE-UPDATE-END', data: { profile } });
 
-type AuthenticationProviderProps = {
-  children: React.ReactNode
-}
-
-function reducer(state: StateType, action: Action) {
-  switch (action.type) {
-    case 'UPDATE-PROFILE':
-      return {
-        ...state,
-        isAuthenticated: true,
-        profile: action.data?.profile,
-      };
-    case 'LOGOUT':
-      return {
-        isAuthenticated: false,
-      };
+    return true;
+  } else {
+    throw new Error('Failed to update profile -> move this to a toast');
   }
-
-  return state;
-}
-
-const AuthenticationContext = React.createContext<
-  {state: StateType, dispatch: DispatchType} | undefined
->(undefined);
-
-const initialReducerValue: StateType = {
-  isAuthenticated: false,
-  isLoading: false,
-}
-
-export const AuthenticationProvider = ({ children }: AuthenticationProviderProps) => {
-  const [state, dispatch] = React.useReducer(reducer, { isAuthenticated: false });
-
-  const value = {state, dispatch};
-
-  return (
-    <AuthenticationContext.Provider value={value}>
-      { children }
-    </AuthenticationContext.Provider>
-  );
-}
-
-
-export const useAuthentication = () => {
-  const context = React.useContext(AuthenticationContext);
-
-  if (context === undefined) {
-    throw new Error('useAuthentication must be used within an AuthenticationContext');
-  }
-
-  const { state, dispatch } = context;
-
-  return {
-    isAuthenticated: context.state.isAuthenticated,
-    profile: context.state.profile,
-    updateProfile: async (profile: ProfileService.ProfileType) => {
-      dispatch({
-        type: 'UPDATE-PROFILE',
-        data: {
-          isAuthenticated: true,
-          profile,
-        }
-      });
-    },
-    signUp: (credentials: SignUpCredentials) => {
-      dispatch({
-        type: 'SIGN-UP',
-        data: credentials,
-      })
-    },
-    login: (profile: ProfileService.ProfileType) => {
-      dispatch({
-        type: 'UPDATE-PROFILE',
-        data: {
-          isAuthenticated: true,
-          profile,
-        }
-      });
-    },
-    logout: async () => {
-      const result = await revoke();
-      dispatch({
-        type: 'LOGOUT',
-      });
-    },
-  };
 }

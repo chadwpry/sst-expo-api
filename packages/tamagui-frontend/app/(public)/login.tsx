@@ -1,60 +1,34 @@
-import { useEffect, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { Lock } from '@tamagui/lucide-icons';
-import { Button, Spinner, View } from 'tamagui';
+import { Button, Spinner, Text, View } from 'tamagui';
 
-import { get as getProfile } from '@/services/Profile';
-import { authorize, useAuthentication, useAuthenticationRequest } from '@/services/Authentication';
+import { useAuthentication } from '@/services/Authentication';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
-  const [isLoading, setLoading] = useState(false);
-  const [request, response, promptAsync] = useAuthenticationRequest();
-  const { login, signUp } = useAuthentication();
+  const { isLoading, signIn } = useAuthentication();
 
-  useEffect(() => {
-    const onLoad = async () => {
-      if (response) {
-        if (response.error) {
-          alert(
-            'Authentication error',
-            response.params.error_description || 'something went wrong'
-          );
-
-          return;
-        }
-
-        if (response.type === 'success') {
-          if (!request?.codeVerifier) {
-            throw new Error('Missing code verifier in authentication/authorization request');
-          }
-
-          const authorizeResponse = await authorize(response.params.code, request?.codeVerifier || '');
-
-          if (authorizeResponse) {
-            const profile = await getProfile();
-
-            if (profile) {
-              login(profile);
-            }
-          }
-        }
-      }
-    }
-
-    onLoad();
-  }, [request, response]);
-
-  const handleLogin = () => {
-    setLoading(true);
-    promptAsync();
+  const handleSignIn = () => {
+    signIn();
   }
 
-  return (
+  return isLoading ? (
     <View alignItems="center" justifyContent="center" h="100%" w="100%">
-      <Button alignSelf="center" iconAfter={isLoading ? <Spinner color="$orange10" /> : Lock} onPress={() => handleLogin()} size="$6">
-        Login
+      <Spinner color="$orange10" size="large" />
+      <Text fontSize="$6" mt="$4">Signing into the application</Text>
+    </View>
+  ) : (
+    <View alignItems="center" justifyContent="center" h="100%" w="100%">
+      <Button
+        borderWidth="1"
+        backgroundColor="transparent"
+        borderColor="#dedede"
+        iconAfter={isLoading ? <Spinner color="$orange10" /> : Lock}
+        onPress={() => handleSignIn()}
+        size="$5"
+      >
+        SignIn
       </Button>
     </View>
   );

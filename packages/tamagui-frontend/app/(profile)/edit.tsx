@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { Avatar, Button, Input, Label, Separator, Spinner, Text, View, XStack, YStack } from 'tamagui';
+import { Avatar, Button, Input, Label, Separator, Spinner, View, XStack, YStack } from 'tamagui';
 import { Save } from '@tamagui/lucide-icons';
 import { useRouter } from 'expo-router';
 import { useAuthentication } from '@/services/Authentication';
 import * as ProfileService from '@/services/Profile';
 
 export default function ProfileEditScreen() {
-  const {profile, updateProfile} = useAuthentication();
+  const {isLoading, profile, profileUpdate} = useAuthentication();
   const router = useRouter();
 
-  const [isLoading, setLoading] = useState(false);
   const [firstName, setFirstName] = useState(profile?.firstName || '');
   const [lastName, setLastName] = useState(profile?.lastName || '');
   const [email, setEmail] = useState(profile?.email || '');
@@ -20,28 +19,22 @@ export default function ProfileEditScreen() {
   }
 
   const handleSave = async () => {
-    setLoading(true);
-
-    const newProfile = {
+    const changes: ProfileService.ProfileType = {
       firstName,
       lastName,
       email,
       profilePicture,
     };
 
-    const response = await ProfileService.put(newProfile);
+    const result = await profileUpdate(changes);
 
-    if (response) {
-      updateProfile(newProfile);
-      setLoading(false);
-
+    if (result) {
       router.replace('..');
-    } else {
-      console.error("Failed to update profile", profile);
     }
   }
 
   const handleProfilePicture = () => {
+    console.log('@TODO: handle logic to capture image and send to ProfileService');
   }
 
   return (
@@ -94,6 +87,7 @@ export default function ProfileEditScreen() {
           <Input
             color="black"
             defaultValue={profile?.email}
+            disabled={true}
             fontSize="$5"
             maxLength={50}
             onChangeText={setEmail}
@@ -104,12 +98,29 @@ export default function ProfileEditScreen() {
 
       </YStack>
 
-      <XStack>
-        <Button borderWidth="1" backgroundColor="transparent" borderColor="#dedede" fontSize="$6" mt="$14" onPress={handleCancel}>
+      <XStack marginHorizontal="$10">
+        <Button
+          borderWidth="1"
+          backgroundColor="transparent"
+          borderColor="#dedede"
+          mt="$14"
+          onPress={handleCancel}
+          size="$5"
+        >
           Cancel
         </Button>
 
-        <Button borderWidth="1" backgroundColor="transparent" borderColor="#dedede" fontSize="$6" mt="$14" onPress={handleSave}>
+        <Separator />
+
+        <Button
+          borderWidth="1"
+          backgroundColor="transparent"
+          borderColor="#dedede"
+          iconAfter={isLoading ? <Spinner color="$orange10" /> : Save}
+          mt="$14"
+          onPress={handleSave}
+          size="$5"
+        >
           Save
         </Button>
       </XStack>

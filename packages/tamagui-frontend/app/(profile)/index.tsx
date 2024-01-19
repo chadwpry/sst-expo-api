@@ -1,17 +1,13 @@
-import { useState } from 'react';
-import { Avatar, Button, H3, Spinner, View, XStack } from 'tamagui';
+import { Avatar, Button, H3, Separator, Spinner, View, XStack } from 'tamagui';
 import { Lock } from '@tamagui/lucide-icons';
 import { router } from 'expo-router';
 import { useAuthentication } from '@/services/Authentication';
 
 export default function ProfileScreen() {
-  const [isLoading, setLoading] = useState(false);
-  const {profile, logout} = useAuthentication();
+  const {isLoading, profile, signOut} = useAuthentication();
 
   const handleLogout = async () => {
-    setLoading(true);
-    logout();
-    setLoading(false);
+    signOut();
   };
 
   const navigateToProfileEdit = async () => {
@@ -30,26 +26,28 @@ export default function ProfileScreen() {
 
       <H3 mt="$6">{`${profile?.firstName || ''} ${profile?.lastName || ''}`}</H3>
 
-      <XStack>
+      <XStack marginHorizontal="$10">
         <Button
           borderWidth="1"
           backgroundColor="transparent"
           borderColor="#dedede"
-          fontSize="$6"
           mt="$14"
           onPress={() => navigateToProfileEdit()}
+          size="$5"
         >
           Edit Profile
         </Button>
+
+        <Separator />
 
         <Button
           borderWidth="1"
           backgroundColor="transparent"
           borderColor="#dedede"
-          fontSize="$6"
           iconAfter={isLoading ? <Spinner color="$orange10" /> : Lock}
           mt="$14"
           onPress={() => handleLogout()}
+          size="$5"
         >
           Logout
         </Button>
