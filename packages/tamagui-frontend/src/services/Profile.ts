@@ -6,10 +6,11 @@ const {
 } = env;
 
 export type ProfileType = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   profilePicture: string;
-}
+};
 
 export const get = async (): Promise<ProfileType> => {
   const idToken = await getIdToken() || '';

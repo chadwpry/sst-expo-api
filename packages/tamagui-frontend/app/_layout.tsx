@@ -69,6 +69,7 @@ const Screens = () => {
       <Stack.Screen name="(authenticated)" options={{
         animation: "fade",
         headerShown: false,
+        headerShadowVisible: false,
       }} />
       <Stack.Screen name='(profile)' options={{
         headerShown: false,

@@ -11,12 +11,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const [isLoading, setLoading] = useState(false);
   const [request, response, promptAsync] = useAuthenticationRequest();
-  const { login } = useAuthentication();
-
-  const handleLogin = () => {
-    setLoading(true);
-    promptAsync();
-  }
+  const { login, signUp } = useAuthentication();
 
   useEffect(() => {
     const onLoad = async () => {
@@ -51,9 +46,14 @@ export default function LoginScreen() {
     onLoad();
   }, [request, response]);
 
+  const handleLogin = () => {
+    setLoading(true);
+    promptAsync();
+  }
+
   return (
     <View alignItems="center" justifyContent="center" h="100%" w="100%">
-      <Button alignSelf="center" disabled={!request} iconAfter={isLoading ? <Spinner color="$orange10" /> : Lock} onPress={() => handleLogin()} size="$6">
+      <Button alignSelf="center" iconAfter={isLoading ? <Spinner color="$orange10" /> : Lock} onPress={() => handleLogin()} size="$6">
         Login
       </Button>
     </View>

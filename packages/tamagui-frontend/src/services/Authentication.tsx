@@ -162,44 +162,58 @@ export const revoke = async () => {
   }
 }
 
-type Action = {
-  type: 'UPDATE-PROFILE' | 'LOGOUT',
-  data?: {
-    isAuthenticated: boolean;
-    profile?: ProfileService.ProfileType,
-  },
+type SignUpCredentials = {
+  username: string;
+  password: string;
 }
-type Dispatch = (action: Action) => void
-type State = {
+
+type Action =
+  | { type: 'SIGN-UP'; data: SignUpCredentials }
+  | { type: 'UPDATE-PROFILE'; data?: {
+      isAuthenticated: boolean,
+      profile?: ProfileService.ProfileType } }
+  | { type: 'LOGOUT', data?: {
+      isAuthenticated: boolean,
+      profile?: ProfileService.ProfileType
+    } };
+
+type DispatchType = (action: Action) => void;
+
+type StateType = {
   isAuthenticated: boolean;
+  isLoading?: boolean;
   profile?: ProfileService.ProfileType,
 }
+
 type AuthenticationProviderProps = {
   children: React.ReactNode
 }
 
-function reducer(state: State, action: Action) {
-  const { profile } = action.data || {};
-
+function reducer(state: StateType, action: Action) {
   switch (action.type) {
     case 'UPDATE-PROFILE':
       return {
         ...state,
         isAuthenticated: true,
-        profile,
+        profile: action.data?.profile,
       };
     case 'LOGOUT':
       return {
         isAuthenticated: false,
-      }
+      };
   }
 
   return state;
 }
 
 const AuthenticationContext = React.createContext<
-  {state: State, dispatch: Dispatch} | undefined
+  {state: StateType, dispatch: DispatchType} | undefined
 >(undefined);
+
+const initialReducerValue: StateType = {
+  isAuthenticated: false,
+  isLoading: false,
+}
 
 export const AuthenticationProvider = ({ children }: AuthenticationProviderProps) => {
   const [state, dispatch] = React.useReducer(reducer, { isAuthenticated: false });
@@ -212,6 +226,7 @@ export const AuthenticationProvider = ({ children }: AuthenticationProviderProps
     </AuthenticationContext.Provider>
   );
 }
+
 
 export const useAuthentication = () => {
   const context = React.useContext(AuthenticationContext);
@@ -233,6 +248,12 @@ export const useAuthentication = () => {
           profile,
         }
       });
+    },
+    signUp: (credentials: SignUpCredentials) => {
+      dispatch({
+        type: 'SIGN-UP',
+        data: credentials,
+      })
     },
     login: (profile: ProfileService.ProfileType) => {
       dispatch({

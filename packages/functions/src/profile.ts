@@ -5,7 +5,8 @@ export const get = ApiHandler(async (_event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
-      name: faker.person.fullName(),
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
       email: faker.internet.email(),
       profilePicture: faker.image.avatar(),
     }),
@@ -13,9 +14,7 @@ export const get = ApiHandler(async (_event) => {
 });
 
 export const put = ApiHandler(async (event) => {
-console.log('event', event.body);
-
-return {
+  return {
     statusCode: 200,
   }
 })

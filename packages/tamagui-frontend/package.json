@@ -6,7 +6,6 @@
     "eas:config": "bun run ./bin/eas-update.ts",
     "cognito:user": "bun run ./bin/cognito-user.ts",
     "prestart": "bun run eas:config",
-
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",

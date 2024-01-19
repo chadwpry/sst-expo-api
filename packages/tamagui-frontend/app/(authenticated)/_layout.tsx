@@ -20,7 +20,7 @@ export default function PrivateLayout() {
 
   const createProfileAvatar = () => (
     <Avatar circular ml="$2" size="$3">
-      <Avatar.Image accessibilityLabel={profile?.name} src={profile?.profilePicture} />
+      <Avatar.Image accessibilityLabel={`${profile?.firstName} ${profile?.lastName}`} src={profile?.profilePicture} />
     </Avatar>
   )
 

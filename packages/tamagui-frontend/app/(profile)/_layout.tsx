@@ -14,15 +14,13 @@ export default function PrivateLayout() {
           </View>
         ),
         headerShown: true,
-        headerStyle: {
-          backgroundColor: '#ffffff',
-        },
         headerShadowVisible: false,
         href: null,
         title: '',
       }} />
       <Tabs.Screen name="edit" options={{
         headerShown: false,
+        headerShadowVisible: false,
         href: null,
         title: '',
       }} />
