@@ -1,9 +1,11 @@
-import { Api, Cognito, StackContext, use } from "sst/constructs";
+import { Api, Bucket, Cognito, StackContext, use } from "sst/constructs";
 import { EventBusStack } from "./EventBusStack";
 import { UserPool, UserPoolClient } from "aws-cdk-lib/aws-cognito";
 import os from 'os';
 
 export function ApiStack({ app, stack }: StackContext) {
+  const mobileScheme = 'expo-template://';
+
   const userPool = new UserPool(stack, "UserPool", {
     selfSignUpEnabled: true,
     signInCaseSensitive: false,
@@ -20,8 +22,7 @@ export function ApiStack({ app, stack }: StackContext) {
     const ip4 = nics.en0.find((nic) => nic.family === 'IPv4');
 
     if (ip4) {
-      callbackUrls.push(`exp://${ip4.address}:8081`);
-      callbackUrls.push(`exp://${ip4.address}:8081/--/profile`);
+      callbackUrls.push(mobileScheme);
     }
   }
 
@@ -49,6 +50,8 @@ export function ApiStack({ app, stack }: StackContext) {
   });
 
   const { bus } = use(EventBusStack);
+
+  const bucket = new Bucket(stack, app.logicalPrefixedName(app.name));
 
   const api = new Api(stack, "api", {
     authorizers: {
@@ -85,6 +88,7 @@ export function ApiStack({ app, stack }: StackContext) {
     UserPoolHostUrl: `https://${domainPrefix}.auth.${app.region}.amazoncognito.com`,
     UserPoolClientId: cognito.userPoolClientId,
     IdentityPoolId: cognito.cognitoIdentityPoolId,
+    mobileScheme,
   });
 
   return {

@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "expo-app",
+    "slug": "expo-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "expo-template",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.observable.expo-template"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "$(PRODUCT_NAME) accesses your photos to create a profile picture",
+          "cameraPermission": "$(PRODUCT_NAME) accesses your camera to create a profile picture"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/SpaceMono-Regular.ttf",
+            "../../node_modules/@tamagui/font-inter/otf/Inter-Black.otf",
+            "../../node_modules/@tamagui/font-inter/otf/Inter-Bold.otf",
+            "../../node_modules/@tamagui/font-inter/otf/Inter-Medium.otf",
+            "../../node_modules/@tamagui/font-inter/otf/Inter-Regular.otf",
+            "../../node_modules/@tamagui/font-inter/otf/Inter-Thin.otf"
+          ]
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "74478309-09ad-447b-867a-5fa679ed656b"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

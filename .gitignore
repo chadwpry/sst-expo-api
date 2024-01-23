@@ -30,5 +30,4 @@ web-build/
 # misc
 .DS_Store
 
-expo-env.d.ts
 # @end expo-cli
